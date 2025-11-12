@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Formatador de Currículos - Novigo-it</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -43,15 +44,9 @@
 
         .main-grid {
             display: grid;
-            grid-template-columns: 2fr 1fr;
+            grid-template-columns: 1fr;
             gap: 20px;
             margin-bottom: 30px;
-        }
-
-        @media (max-width: 1024px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-            }
         }
 
         .card {
@@ -80,6 +75,19 @@
 
         .card-content {
             padding: 25px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
         }
 
         .form-group {
@@ -121,18 +129,59 @@
 
         .form-group textarea {
             resize: vertical;
-            min-height: 300px;
+            min-height: 120px;
             font-family: 'Courier New', monospace;
+        }
+
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-upload input[type="file"] {
+            display: none;
+        }
+
+        .file-upload-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 20px;
+            border: 2px dashed #667eea;
+            border-radius: 6px;
+            background: #f8f9ff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .file-upload-label:hover {
+            background: #f0f2ff;
+            border-color: #764ba2;
+        }
+
+        .file-upload input[type="file"]:disabled + .file-upload-label {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .file-name {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 8px;
         }
 
         .button-group {
             display: flex;
             gap: 10px;
             margin-top: 20px;
+            flex-wrap: wrap;
         }
 
         .button {
-            flex: 1;
             padding: 12px 20px;
             border: none;
             border-radius: 6px;
@@ -150,6 +199,7 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             flex: 1;
+            min-width: 150px;
         }
 
         .button-primary:hover:not(:disabled) {
@@ -187,16 +237,13 @@
 
         .actions-buttons {
             display: none;
-            flex-direction: column;
+            flex-direction: row;
             gap: 10px;
+            flex-wrap: wrap;
         }
 
         .actions-buttons.active {
             display: flex;
-        }
-
-        .actions-buttons .button {
-            width: 100%;
         }
 
         .preview-section {
@@ -210,7 +257,7 @@
 
         .preview-content {
             background: white;
-            padding: 40px;
+            padding: 50px;
             border-radius: 12px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.2);
             font-family: Arial, sans-serif;
@@ -224,7 +271,7 @@
             align-items: center;
             margin-bottom: 30px;
             padding-bottom: 20px;
-            border-bottom: 3px solid #333;
+            border-bottom: 3px solid #000;
         }
 
         .preview-logo {
@@ -235,7 +282,7 @@
 
         .preview-title {
             text-align: right;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: bold;
             letter-spacing: 2px;
         }
@@ -252,11 +299,13 @@
 
         .preview-section-title {
             font-weight: bold;
-            font-size: 1rem;
+            font-size: 0.95rem;
             margin-top: 25px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             padding-bottom: 8px;
-            border-bottom: 2px solid #333;
+            padding-top: 8px;
+            border-bottom: 2px solid #000;
+            border-top: 2px solid #000;
         }
 
         .preview-parecer {
@@ -268,32 +317,36 @@
             line-height: 1.6;
         }
 
-        .preview-experience-item {
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-        }
-
-        .preview-experience-item:not(:last-child) {
-            border-bottom: 1px solid #e0e0e0;
+        .preview-analysis {
+            background: #f5f5f5;
+            padding: 15px;
+            border-left: 4px solid #764ba2;
+            margin: 15px 0;
+            font-size: 0.95rem;
+            line-height: 1.6;
         }
 
         .preview-label {
             font-weight: bold;
             margin-top: 10px;
             margin-bottom: 5px;
+            font-size: 0.95rem;
         }
 
         .preview-content-text {
             margin-left: 0;
             font-size: 0.95rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
         }
 
         .preview-footer {
             margin-top: 40px;
             padding-top: 20px;
-            border-top: 3px solid #333;
+            border-top: 3px solid #000;
             text-align: center;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: #666;
         }
 
@@ -309,11 +362,6 @@
 
         @keyframes spin {
             to { transform: rotate(360deg); }
-        }
-
-        .sticky-actions {
-            position: sticky;
-            top: 20px;
         }
 
         .alert {
@@ -338,6 +386,45 @@
             color: #3c3;
             border: 1px solid #cfc;
         }
+
+        .alert-info {
+            background: #eef;
+            color: #33c;
+            border: 1px solid #ccf;
+        }
+
+        .section-divider {
+            margin: 30px 0;
+            border: none;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .compatibility-score {
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            margin: 10px 0;
+            font-size: 0.95rem;
+        }
+
+        .score-alta {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .score-media {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+
+        .score-baixa {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
     </style>
 </head>
 <body>
@@ -345,76 +432,92 @@
         <!-- Header -->
         <div class="header">
             <h1>📋 Formatador de Currículos</h1>
-            <p>Padrão Novigo-it - Exportação em Word Profissional</p>
+            <p>Padrão Novigo-it - Análise Completa CV vs Vaga</p>
         </div>
 
         <!-- Alert -->
         <div id="alert" class="alert"></div>
 
-        <!-- Main Grid -->
-        <div class="main-grid">
-            <!-- Input Section -->
-            <div class="card">
-                <div class="card-header">
-                    <h2>Dados do Currículo</h2>
-                    <p>Preencha os campos abaixo</p>
-                </div>
-                <div class="card-content">
+        <!-- Main Form -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Dados do Candidato</h2>
+                <p>Preencha os campos abaixo</p>
+            </div>
+            <div class="card-content">
+                <!-- Campos Fixos -->
+                <div class="form-row">
                     <div class="form-group">
                         <label for="nome">Nome do Candidato *</label>
                         <input type="text" id="nome" placeholder="Ex: João Silva" disabled>
                     </div>
-
                     <div class="form-group">
                         <label for="vaga">Vaga *</label>
                         <input type="text" id="vaga" placeholder="Ex: Analista de Suporte Pleno" disabled>
                     </div>
+                </div>
 
+                <div class="form-row">
                     <div class="form-group">
                         <label for="idade">Idade, Estado Civil, Escolaridade</label>
                         <input type="text" id="idade" placeholder="Ex: 28 anos, Solteiro, Graduado" disabled>
                     </div>
-
                     <div class="form-group">
-                        <label for="reside">Reside</label>
+                        <label for="reside">Reside em</label>
                         <input type="text" id="reside" placeholder="Ex: São Paulo - SP" disabled>
                     </div>
+                </div>
 
-                    <div class="form-group">
-                        <label for="curriculo">Currículo *</label>
-                        <textarea id="curriculo" placeholder="Cole aqui o texto completo do currículo..." disabled></textarea>
-                    </div>
+                <hr class="section-divider">
 
-                    <div class="button-group">
-                        <button id="processarBtn" class="button button-primary">
-                            <span>⚙️ Processar Currículo</span>
-                        </button>
-                        <button id="previewBtn" class="button button-secondary" style="display: none;">
-                            👁️ Preview
-                        </button>
+                <!-- Upload CV -->
+                <div class="form-group">
+                    <label>Currículo (PDF ou Word) *</label>
+                    <div class="file-upload">
+                        <input type="file" id="cvFile" accept=".pdf,.doc,.docx" disabled>
+                        <label for="cvFile" class="file-upload-label">
+                            📎 Clique ou arraste o arquivo aqui
+                        </label>
+                        <div id="fileName" class="file-name"></div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Actions Section -->
-            <div class="sticky-actions">
-                <div class="card">
-                    <div class="card-header">
-                        <h2>Ações</h2>
-                        <p>Gerenciar currículo</p>
+                <hr class="section-divider">
+
+                <!-- Descrição da Vaga -->
+                <div class="form-group">
+                    <label for="vagaDescricao">Descrição da Vaga (Responsabilidades e Requisitos) *</label>
+                    <textarea id="vagaDescricao" placeholder="Cole aqui a descrição da vaga, requisitos técnicos, responsabilidades, etc..." disabled></textarea>
+                </div>
+
+                <div class="button-group">
+                    <button id="processarBtn" class="button button-primary">
+                        <span>⚙️ Analisar Currículo</span>
+                    </button>
+                    <button id="previewBtn" class="button button-secondary" style="display: none;">
+                        👁️ Preview
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions Section -->
+        <div style="margin-top: 20px;">
+            <div class="card">
+                <div class="card-header">
+                    <h2>Ações</h2>
+                </div>
+                <div class="card-content">
+                    <div id="acoesVazias" class="actions-placeholder">
+                        ⏳ Processe um currículo para ativar as ações
                     </div>
-                    <div class="card-content">
-                        <div id="acoesVazias" class="actions-placeholder">
-                            ⏳ Processe um currículo para ativar as ações
-                        </div>
-                        <div id="acoesAtivas" class="actions-buttons">
-                            <button id="exportarBtn" class="button button-primary">
-                                📥 Exportar Word
-                            </button>
-                            <button id="novoBtn" class="button button-secondary">
-                                🔄 Novo Currículo
-                            </button>
-                        </div>
+                    <div id="acoesAtivas" class="actions-buttons">
+                        <button id="exportarBtn" class="button button-primary">
+                            📥 Exportar Word
+                        </button>
+                        <button id="novoBtn" class="button button-secondary">
+                            🔄 Novo Currículo
+                        </button>
                     </div>
                 </div>
             </div>
@@ -424,7 +527,7 @@
         <div id="previewSection" class="preview-section">
             <div class="card">
                 <div class="card-header">
-                    <h2>Preview do Currículo</h2>
+                    <h2>Preview do Currículo Formatado</h2>
                     <p>Visualização antes de exportar</p>
                 </div>
                 <div class="card-content">
@@ -436,17 +539,24 @@
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>
+        // Configurar pdf.js worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
         // Estado da aplicação
         let appState = {
             nome: '',
             vaga: '',
             idade: '',
             reside: '',
-            curriculo: '',
+            cvText: '',
+            vagaDescricao: '',
+            cvFile: null,
             loading: false,
             preview: false,
-            processedData: null
+            processedData: null,
+            analysis: null
         };
 
         // Elementos do DOM
@@ -454,7 +564,9 @@
         const vagaInput = document.getElementById('vaga');
         const idadeInput = document.getElementById('idade');
         const resideInput = document.getElementById('reside');
-        const curriculoInput = document.getElementById('curriculo');
+        const cvFileInput = document.getElementById('cvFile');
+        const fileNameEl = document.getElementById('fileName');
+        const vagaDescricaoInput = document.getElementById('vagaDescricao');
         const processarBtn = document.getElementById('processarBtn');
         const previewBtn = document.getElementById('previewBtn');
         const exportarBtn = document.getElementById('exportarBtn');
@@ -471,7 +583,8 @@
             vagaInput.disabled = false;
             idadeInput.disabled = false;
             resideInput.disabled = false;
-            curriculoInput.disabled = false;
+            cvFileInput.disabled = false;
+            vagaDescricaoInput.disabled = false;
         });
 
         // Event listeners
@@ -479,93 +592,321 @@
         vagaInput.addEventListener('change', (e) => appState.vaga = e.target.value);
         idadeInput.addEventListener('change', (e) => appState.idade = e.target.value);
         resideInput.addEventListener('change', (e) => appState.reside = e.target.value);
-        curriculoInput.addEventListener('change', (e) => appState.curriculo = e.target.value);
-
+        vagaDescricaoInput.addEventListener('change', (e) => appState.vagaDescricao = e.target.value);
+        cvFileInput.addEventListener('change', handleFileSelect);
         processarBtn.addEventListener('click', processarCurriculo);
         previewBtn.addEventListener('click', togglePreview);
         exportarBtn.addEventListener('click', exportarWord);
         novoBtn.addEventListener('click', resetForm);
 
+        // Drag and drop
+        const fileUploadLabel = document.querySelector('.file-upload-label');
+        fileUploadLabel.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUploadLabel.style.background = '#f0f2ff';
+            fileUploadLabel.style.borderColor = '#764ba2';
+        });
+
+        fileUploadLabel.addEventListener('dragleave', () => {
+            fileUploadLabel.style.background = '#f8f9ff';
+            fileUploadLabel.style.borderColor = '#667eea';
+        });
+
+        fileUploadLabel.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUploadLabel.style.background = '#f8f9ff';
+            fileUploadLabel.style.borderColor = '#667eea';
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                cvFileInput.files = files;
+                handleFileSelect();
+            }
+        });
+
         // Funções auxiliares
         function showAlert(message, type = 'error') {
             alertEl.textContent = message;
             alertEl.className = `alert show alert-${type}`;
-            setTimeout(() => alertEl.classList.remove('show'), 4000);
+            setTimeout(() => alertEl.classList.remove('show'), 5000);
         }
 
-        function extrairInformacoes(texto) {
+        async function handleFileSelect() {
+            const file = cvFileInput.files[0];
+            if (!file) return;
+
+            appState.cvFile = file;
+            fileNameEl.textContent = `✓ ${file.name}`;
+
+            try {
+                if (file.type === 'application/pdf') {
+                    appState.cvText = await extractPdfText(file);
+                } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
+                           file.type === 'application/msword' ||
+                           file.name.endsWith('.docx') ||
+                           file.name.endsWith('.doc')) {
+                    appState.cvText = await extractWordText(file);
+                } else {
+                    showAlert('Formato não suportado. Use PDF ou Word.', 'error');
+                    return;
+                }
+
+                showAlert('Arquivo carregado com sucesso!', 'success');
+            } catch (error) {
+                showAlert('Erro ao processar arquivo: ' + error.message, 'error');
+                appState.cvText = '';
+            }
+        }
+
+        async function extractPdfText(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+            let text = '';
+
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const textContent = await page.getTextContent();
+                text += textContent.items.map(item => item.str).join(' ') + '\n';
+            }
+
+            return text;
+        }
+
+        async function extractWordText(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const result = await mammoth.extractRawText({ arrayBuffer });
+            return result.value;
+        }
+
+        function analisarPerfil(cvText, vagaDescricao) {
+            const cvLower = cvText.toLowerCase();
+            const vagaLower = vagaDescricao.toLowerCase();
+
+            // Análise do CV
+            const cvAnalysis = {
+                experiencia: {
+                    tem: /experiência|empresa|trabalh|profissional|cargo|função|atuou|trabalhou/i.test(cvText),
+                    anos: (cvText.match(/(\d+)\s*anos?/gi) || []).map(m => parseInt(m)).filter(n => n > 0 && n < 80),
+                    empresas: (cvText.match(/empresa[s]?:|trabalh[ou]+ em|atuou em|na empresa/gi) || []).length
+                },
+                formacao: {
+                    temGraduacao: /graduação|bacharelado|licenciatura|tecnólogo|superior/i.test(cvText),
+                    temPosGraduacao: /pós-graduação|mestrado|doutorado|especialização|mba/i.test(cvText),
+                    temCertificacao: /certificação|certificado|curso|treinamento|formação|certificado/i.test(cvText)
+                },
+                idiomas: {
+                    ingles: /inglês|english|fluent|advanced|intermediate|proficiency/i.test(cvText),
+                    espanhol: /espanhol|spanish/i.test(cvText),
+                    outros: /francês|alemão|italiano|português|mandarin|chinês/i.test(cvText)
+                },
+                competencias: {
+                    tecnicas: /java|python|javascript|react|angular|node|sql|banco de dados|cloud|aws|azure|devops|docker|kubernetes|c\+\+|c#|php|ruby|golang/i.test(cvText),
+                    lideranca: /liderou|gerenciou|coordenou|supervisionou|equipe|time|projeto|gestão|liderança/i.test(cvText),
+                    comunicacao: /comunicação|apresentação|negociação|relacionamento|cliente|stakeholder|soft skills/i.test(cvText),
+                    analise: /análise|analítico|problema|solução|estratégia|planejamento|organização/i.test(cvText)
+                }
+            };
+
+            // Análise da Vaga
+            const vagaAnalysis = {
+                requisitos: {
+                    experiencia: /experiência|anos de experiência|requisito/i.test(vagaDescricao),
+                    formacao: /graduação|pós-graduação|formação|escolaridade/i.test(vagaDescricao),
+                    idiomas: /inglês|espanhol|idioma|fluência/i.test(vagaDescricao),
+                    tecnicas: /java|python|javascript|react|angular|node|sql|banco de dados|cloud|aws|azure|devops|docker|kubernetes|c\+\+|c#|php|ruby|golang/i.test(vagaDescricao)
+                },
+                responsabilidades: {
+                    lideranca: /liderou|gerenciar|coordenar|supervisionar|equipe|time|projeto/i.test(vagaDescricao),
+                    comunicacao: /comunicação|apresentação|negociação|relacionamento|cliente|stakeholder/i.test(vagaDescricao),
+                    analise: /análise|analítico|problema|solução|estratégia|planejamento/i.test(vagaDescricao)
+                }
+            };
+
+            // Cálculo de compatibilidade
+            let pontos = 0;
+            let totalPontos = 0;
+
+            // Experiência
+            if (vagaAnalysis.requisitos.experiencia) {
+                totalPontos += 20;
+                if (cvAnalysis.experiencia.tem) {
+                    const anosExperiencia = cvAnalysis.experiencia.anos.length > 0 ? Math.max(...cvAnalysis.experiencia.anos) : 0;
+                    if (anosExperiencia >= 5) pontos += 20;
+                    else if (anosExperiencia >= 2) pontos += 15;
+                    else if (anosExperiencia > 0) pontos += 10;
+                }
+            }
+
+            // Formação
+            if (vagaAnalysis.requisitos.formacao) {
+                totalPontos += 15;
+                if (cvAnalysis.formacao.temPosGraduacao) pontos += 15;
+                else if (cvAnalysis.formacao.temGraduacao) pontos += 12;
+            }
+
+            // Competências Técnicas
+            if (vagaAnalysis.requisitos.tecnicas) {
+                totalPontos += 25;
+                if (cvAnalysis.competencias.tecnicas) pontos += 25;
+            }
+
+            // Liderança
+            if (vagaAnalysis.responsabilidades.lideranca) {
+                totalPontos += 15;
+                if (cvAnalysis.competencias.lideranca) pontos += 15;
+            }
+
+            // Comunicação
+            if (vagaAnalysis.responsabilidades.comunicacao) {
+                totalPontos += 15;
+                if (cvAnalysis.competencias.comunicacao) pontos += 15;
+            }
+
+            // Idiomas
+            if (vagaAnalysis.requisitos.idiomas) {
+                totalPontos += 10;
+                if (cvAnalysis.idiomas.ingles) pontos += 10;
+            }
+
+            const percentualCompatibilidade = totalPontos > 0 ? Math.round((pontos / totalPontos) * 100) : 0;
+
+            let nivelCompatibilidade = 'Baixa';
+            if (percentualCompatibilidade >= 75) nivelCompatibilidade = 'Alta';
+            else if (percentualCompatibilidade >= 50) nivelCompatibilidade = 'Média';
+
             return {
-                temExperiencia: /experiência|empresa|trabalh|profissional/i.test(texto),
-                temFormacao: /graduação|pós-graduação|certificação|curso|formação|superior/i.test(texto),
-                temIdiomas: /inglês|espanhol|francês|alemão|português|idioma/i.test(texto),
-                temHabilidades: /habilidades|competências|skills|conhecimentos/i.test(texto),
-                temProjetos: /projeto|desenvolveu|implementou|liderou|coordenou/i.test(texto),
-                temTecnologias: /java|python|javascript|react|angular|node|sql|banco de dados|cloud|aws|azure/i.test(texto),
-                temLideranca: /liderou|gerenciou|coordenou|supervisionou|equipe/i.test(texto),
-                temComunicacao: /comunicação|apresentação|negociação|relacionamento/i.test(texto),
+                cvAnalysis,
+                vagaAnalysis,
+                compatibilidade: {
+                    percentual: percentualCompatibilidade,
+                    nivel: nivelCompatibilidade,
+                    pontos,
+                    totalPontos
+                }
             };
         }
 
-        function gerarParecer(texto, vagaName) {
-            const info = extrairInformacoes(texto);
-            
-            const temInformacoes = info.temExperiencia || info.temFormacao || info.temHabilidades;
-            if (!temInformacoes) {
-                return "Informações insuficientes para avaliação detalhada do perfil.";
-            }
-            
+        function gerarParecer(analysis) {
+            const { cvAnalysis, vagaAnalysis, compatibilidade } = analysis;
             const competencias = [];
-            
-            if (info.temExperiencia) {
-                if (info.temTecnologias) {
-                    competencias.push("experiência técnica com tecnologias relevantes");
-                } else {
-                    competencias.push("experiência profissional");
-                }
+
+            if (cvAnalysis.experiencia.tem) {
+                const anos = cvAnalysis.experiencia.anos.length > 0 ? Math.max(...cvAnalysis.experiencia.anos) : 0;
+                if (anos >= 8) competencias.push(`experiência profissional sênior (${anos}+ anos)`);
+                else if (anos >= 5) competencias.push(`experiência profissional plena (${anos}+ anos)`);
+                else if (anos > 0) competencias.push(`experiência profissional (${anos}+ anos)`);
             }
-            
-            if (info.temFormacao) {
+
+            if (cvAnalysis.formacao.temPosGraduacao) {
+                competencias.push("pós-graduação");
+            } else if (cvAnalysis.formacao.temGraduacao) {
                 competencias.push("formação acadêmica");
             }
-            
-            if (info.temLideranca) {
-                competencias.push("perfil com liderança");
+
+            if (cvAnalysis.competencias.tecnicas) {
+                competencias.push("expertise técnica");
             }
-            
-            if (info.temIdiomas) {
-                competencias.push("domínio de idiomas");
+
+            if (cvAnalysis.competencias.lideranca) {
+                competencias.push("experiência em liderança");
             }
-            
+
+            if (cvAnalysis.idiomas.ingles) {
+                competencias.push("fluência em inglês");
+            }
+
+            if (cvAnalysis.competencias.comunicacao) {
+                competencias.push("excelente comunicação");
+            }
+
             if (competencias.length === 0) {
-                competencias.push("perfil profissional");
+                return "Informações insuficientes para avaliação detalhada do perfil.";
             }
+
+            let parecer = "Profissional com " + competencias.join(", ") + ". ";
             
-            let parecer = "Profissional com ";
-            
-            if (competencias.length === 1) {
-                parecer += competencias[0];
-            } else if (competencias.length === 2) {
-                parecer += competencias.join(" e ");
+            if (compatibilidade.nivel === 'Alta') {
+                parecer += `Perfil altamente aderente à vaga (${compatibilidade.percentual}% de compatibilidade).`;
+            } else if (compatibilidade.nivel === 'Média') {
+                parecer += `Perfil com boa aderência à vaga (${compatibilidade.percentual}% de compatibilidade), com potencial de desenvolvimento em algumas áreas.`;
             } else {
-                parecer += competencias.slice(0, -1).join(", ") + " e " + competencias[competencias.length - 1];
+                parecer += `Perfil com compatibilidade moderada à vaga (${compatibilidade.percentual}% de compatibilidade). Recomenda-se análise detalhada das lacunas.`;
             }
-            
-            parecer += ". Perfil aderente à vaga de " + vagaName + ".";
-            
-            if (parecer.length > 400) {
-                parecer = parecer.substring(0, 397) + "...";
-            }
-            
+
             return parecer;
         }
 
+        function gerarAnaliseComparativa(analysis) {
+            const { cvAnalysis, vagaAnalysis, compatibilidade } = analysis;
+            let analise = '';
+
+            analise += `COMPATIBILIDADE GERAL: ${compatibilidade.percentual}% (${compatibilidade.nivel})\n\n`;
+
+            analise += 'PONTOS FORTES DE ALINHAMENTO:\n';
+            if (cvAnalysis.experiencia.tem && vagaAnalysis.requisitos.experiencia) {
+                const anos = cvAnalysis.experiencia.anos.length > 0 ? Math.max(...cvAnalysis.experiencia.anos) : 0;
+                analise += `• Experiência profissional relevante (${anos}+ anos)\n`;
+            }
+            if (cvAnalysis.competencias.tecnicas && vagaAnalysis.requisitos.tecnicas) {
+                analise += '• Competências técnicas alinhadas com os requisitos da vaga\n';
+            }
+            if (cvAnalysis.competencias.lideranca && vagaAnalysis.responsabilidades.lideranca) {
+                analise += '• Experiência em liderança e gestão de equipes\n';
+            }
+            if (cvAnalysis.idiomas.ingles && vagaAnalysis.requisitos.idiomas) {
+                analise += '• Fluência em inglês conforme requisitado\n';
+            }
+            if (cvAnalysis.formacao.temPosGraduacao && vagaAnalysis.requisitos.formacao) {
+                analise += '• Formação acadêmica avançada (pós-graduação)\n';
+            }
+
+            analise += '\nLACUNAS OU OPORTUNIDADES DE DESENVOLVIMENTO:\n';
+            let temLacunas = false;
+
+            if (!cvAnalysis.experiencia.tem && vagaAnalysis.requisitos.experiencia) {
+                analise += '• Experiência profissional não claramente identificada no CV\n';
+                temLacunas = true;
+            }
+            if (!cvAnalysis.competencias.tecnicas && vagaAnalysis.requisitos.tecnicas) {
+                analise += '• Competências técnicas específicas não mencionadas\n';
+                temLacunas = true;
+            }
+            if (!cvAnalysis.competencias.lideranca && vagaAnalysis.responsabilidades.lideranca) {
+                analise += '• Experiência em liderança não evidenciada\n';
+                temLacunas = true;
+            }
+            if (!cvAnalysis.idiomas.ingles && vagaAnalysis.requisitos.idiomas) {
+                analise += '• Idioma inglês não mencionado no CV\n';
+                temLacunas = true;
+            }
+
+            if (!temLacunas) {
+                analise += '• Nenhuma lacuna significativa identificada\n';
+            }
+
+            analise += '\nSUGESTÃO DE FIT:\n';
+            if (compatibilidade.nivel === 'Alta') {
+                analise += 'Candidato com perfil altamente alinhado com a vaga. Recomenda-se prosseguir com próximas etapas do processo seletivo.';
+            } else if (compatibilidade.nivel === 'Média') {
+                analise += 'Candidato com bom potencial para a vaga. Recomenda-se entrevista técnica para validar competências específicas e potencial de desenvolvimento.';
+            } else {
+                analise += 'Candidato com compatibilidade moderada. Recomenda-se análise aprofundada das lacunas antes de prosseguir.';
+            }
+
+            return analise;
+        }
+
         async function processarCurriculo() {
-            if (!appState.curriculo.trim()) {
-                showAlert("Por favor, insira o texto do currículo", 'error');
+            if (!appState.cvText.trim()) {
+                showAlert("Por favor, carregue um arquivo de currículo", 'error');
                 return;
             }
             if (!appState.vaga.trim()) {
                 showAlert("Por favor, insira o nome da vaga", 'error');
+                return;
+            }
+            if (!appState.vagaDescricao.trim()) {
+                showAlert("Por favor, insira a descrição da vaga", 'error');
                 return;
             }
 
@@ -573,21 +914,25 @@
             updateUI();
 
             try {
-                await new Promise(resolve => setTimeout(resolve, 500));
+                await new Promise(resolve => setTimeout(resolve, 800));
+
+                appState.analysis = analisarPerfil(appState.cvText, appState.vagaDescricao);
                 
                 appState.processedData = {
                     nome: appState.nome || 'Candidato',
                     vaga: appState.vaga,
                     idade: appState.idade || '',
                     reside: appState.reside || '',
-                    curriculo: appState.curriculo,
-                    parecer: gerarParecer(appState.curriculo, appState.vaga),
+                    curriculo: appState.cvText,
+                    parecer: gerarParecer(appState.analysis),
+                    analiseComparativa: gerarAnaliseComparativa(appState.analysis),
+                    compatibilidade: appState.analysis.compatibilidade,
                     timestamp: new Date().toLocaleString("pt-BR")
                 };
                 
                 updateUI();
                 renderPreview();
-                showAlert('Currículo processado com sucesso!', 'success');
+                showAlert('Currículo analisado com sucesso!', 'success');
             } catch (error) {
                 showAlert("Erro ao processar: " + error.message, 'error');
             } finally {
@@ -602,12 +947,13 @@
             vagaInput.disabled = appState.loading;
             idadeInput.disabled = appState.loading;
             resideInput.disabled = appState.loading;
-            curriculoInput.disabled = appState.loading;
+            cvFileInput.disabled = appState.loading;
+            vagaDescricaoInput.disabled = appState.loading;
             
             if (appState.loading) {
-                processarBtn.innerHTML = '<span class="spinner"></span> Processando...';
+                processarBtn.innerHTML = '<span class="spinner"></span> Analisando...';
             } else {
-                processarBtn.innerHTML = '⚙️ Processar Currículo';
+                processarBtn.innerHTML = '⚙️ Analisar Currículo';
             }
 
             if (appState.processedData) {
@@ -636,6 +982,10 @@
         function renderPreview() {
             if (!appState.processedData) return;
 
+            const { compatibilidade } = appState.analysis;
+            const scoreClass = compatibilidade.nivel === 'Alta' ? 'score-alta' : 
+                              compatibilidade.nivel === 'Média' ? 'score-media' : 'score-baixa';
+
             const html = `
                 <div class="preview-header">
                     <div class="preview-logo">🔷 NOVIGO IT</div>
@@ -651,6 +1001,12 @@
 
                 <div class="preview-section-title">Parecer Pré-Seleção</div>
                 <div class="preview-parecer">${appState.processedData.parecer}</div>
+
+                <div class="preview-section-title">Análise de Compatibilidade com a Vaga</div>
+                <div class="compatibility-score ${scoreClass}">
+                    Compatibilidade: ${compatibilidade.percentual}% (${compatibilidade.nivel})
+                </div>
+                <div class="preview-analysis">${appState.processedData.analiseComparativa.replace(/\n/g, '<br>')}</div>
 
                 <div class="preview-section-title">Currículo</div>
                 <div class="preview-content-text">${appState.processedData.curriculo.replace(/\n/g, '<br>')}</div>
@@ -674,36 +1030,34 @@
             exportarBtn.disabled = true;
 
             try {
-                const element = previewContent;
-                const opt = {
-                    margin: 10,
-                    filename: `Curriculo_${appState.processedData.vaga.replace(/\s+/g, '_')}.pdf`,
-                    image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2 },
-                    jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
-                };
+                const { compatibilidade } = appState.analysis;
+                const scoreClass = compatibilidade.nivel === 'Alta' ? 'Alta' : 
+                                  compatibilidade.nivel === 'Média' ? 'Média' : 'Baixa';
 
-                // Gerar PDF primeiro
-                await html2pdf().set(opt).from(element).save();
-
-                // Criar também um arquivo Word simples em HTML
                 const wordHtml = `
                     <html>
                     <head>
                         <meta charset="UTF-8">
                         <style>
-                            body { font-family: Arial, sans-serif; margin: 40px; }
-                            .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid #333; padding-bottom: 20px; }
-                            .info { text-align: center; margin-bottom: 30px; }
-                            .section-title { font-weight: bold; font-size: 14px; margin-top: 20px; margin-bottom: 10px; border-bottom: 2px solid #333; padding-bottom: 8px; }
-                            .parecer { background: #f9f9f9; padding: 15px; border-left: 4px solid #667eea; margin: 15px 0; }
-                            .footer { margin-top: 40px; border-top: 3px solid #333; padding-top: 20px; text-align: center; font-size: 11px; }
+                            body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+                            .header { text-align: center; margin-bottom: 20px; border-bottom: 3px solid #000; padding-bottom: 15px; }
+                            .title { text-align: right; font-weight: bold; letter-spacing: 2px; margin-bottom: 20px; }
+                            .info { text-align: center; margin-bottom: 20px; }
+                            .section-title { font-weight: bold; font-size: 14px; margin-top: 20px; margin-bottom: 10px; border-bottom: 2px solid #000; border-top: 2px solid #000; padding: 8px 0; }
+                            .parecer { background: #f9f9f9; padding: 12px; border-left: 4px solid #667eea; margin: 12px 0; }
+                            .analysis { background: #f5f5f5; padding: 12px; border-left: 4px solid #764ba2; margin: 12px 0; }
+                            .score { display: inline-block; padding: 8px 15px; border-radius: 4px; font-weight: bold; margin: 10px 0; }
+                            .score-alta { background: #d4edda; color: #155724; }
+                            .score-media { background: #fff3cd; color: #856404; }
+                            .score-baixa { background: #f8d7da; color: #721c24; }
+                            .footer { margin-top: 30px; border-top: 3px solid #000; padding-top: 15px; text-align: center; font-size: 11px; }
                         </style>
                     </head>
                     <body>
                         <div class="header">
-                            <h1>NOVIGO IT - CURRICULUM VITAE</h1>
+                            <strong>NOVIGO IT</strong>
                         </div>
+                        <div class="title">CURRICULUM VITAE</div>
                         <div class="info">
                             <p><strong>${appState.processedData.nome}</strong></p>
                             <p><strong>Vaga: ${appState.processedData.vaga}</strong></p>
@@ -712,6 +1066,11 @@
                         </div>
                         <div class="section-title">Parecer Pré-Seleção</div>
                         <div class="parecer">${appState.processedData.parecer}</div>
+                        <div class="section-title">Análise de Compatibilidade com a Vaga</div>
+                        <div class="score score-${compatibilidade.nivel.toLowerCase()}">
+                            Compatibilidade: ${compatibilidade.percentual}% (${scoreClass})
+                        </div>
+                        <div class="analysis">${appState.processedData.analiseComparativa.replace(/\n/g, '<br>')}</div>
                         <div class="section-title">Currículo</div>
                         <p>${appState.processedData.curriculo.replace(/\n/g, '</p><p>')}</p>
                         <div class="footer">
@@ -746,15 +1105,20 @@
             appState.vaga = '';
             appState.idade = '';
             appState.reside = '';
-            appState.curriculo = '';
+            appState.cvText = '';
+            appState.vagaDescricao = '';
+            appState.cvFile = null;
             appState.processedData = null;
             appState.preview = false;
+            appState.analysis = null;
             
             nomeInput.value = '';
             vagaInput.value = '';
             idadeInput.value = '';
             resideInput.value = '';
-            curriculoInput.value = '';
+            cvFileInput.value = '';
+            fileNameEl.textContent = '';
+            vagaDescricaoInput.value = '';
             previewSection.classList.remove('active');
             previewBtn.textContent = '👁️ Preview';
             
@@ -767,3 +1131,4 @@
     </script>
 </body>
 </html>
+
